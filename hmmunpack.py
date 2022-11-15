@@ -241,7 +241,9 @@ def process_files(files: List[File], data: bytes, packname: str) -> None:
         shutil.rmtree(output_dir)
         output_dir.mkdir(parents=True, exist_ok=False)
     last = ""
+    all_files_len = 0
     for item in files:
+        all_files_len += item.length
         fname = item.filename
         # File names are lightly compressed. If a reuse length 'n' is
         # set, then the given filename includes the first 'n' bytes of
@@ -264,6 +266,7 @@ def process_files(files: List[File], data: bytes, packname: str) -> None:
     with open(extract_report, "w", encoding="utf8") as report:
         report.write("Extracted files:\n")
         report.write("".join(extracted))
+    print(f"No. bytes extracted: {all_files_len}", file=sys.stderr)
     print(f"Extract details at: {Path(extract_report).absolute()}", file=sys.stderr)
 
 
@@ -274,6 +277,8 @@ def extract(path: Path) -> None:
     data = None
     with open(str(path), "r+b") as extract_file:
         data = extract_file.read()
+
+    print(f"File size: {len(data)}", file=sys.stderr)
 
     data_len = len(data)
     header = data[:header_length]
@@ -290,7 +295,7 @@ def extract(path: Path) -> None:
     directory = data[dir_from : dir_from + approx_dir_len]
     files = process_directory(directory, no_files)
 
-    print(f"No files: {no_files}", file=sys.stderr)
+    print(f"No. files: {no_files}", file=sys.stderr)
 
     process_files(files, data, packfile_name)
 
